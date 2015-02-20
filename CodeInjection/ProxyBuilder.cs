@@ -70,6 +70,11 @@ namespace CodeInjection
 			FieldBuilder pipelineField, 
 			FieldBuilder realInstanceField) {
 
+			Contract.Requires(@interface != null);
+			Contract.Requires(typeBuilder != null);
+			Contract.Requires(pipelineField != null);
+			Contract.Requires(realInstanceField != null);
+
 			var interfaceMethods = @interface.GetMethods();
 			for (var i = 0; i < interfaceMethods.Length; i++) {
 				var method = interfaceMethods[i];

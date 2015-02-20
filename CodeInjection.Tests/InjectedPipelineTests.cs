@@ -108,6 +108,60 @@ namespace CodeInjection.Tests
 		}
 
 		[Fact]
+		public void ExecutePreCondition_WillNotCallAnotherLogicIfPreviousReturnsNull() {
+			IInjectedPipeline pipeline = new InjectedPipeline();
+			var firstLogic = new Mock<IInjectedLogic>();
+			var lastLogic = new Mock<IInjectedLogic>();
+			firstLogic.Setup(
+				l => l.BeforeExecute(
+					It.IsAny<object>(),
+					It.IsAny<MethodInfo>(),
+					It.IsAny<object[]>(),
+					It.IsAny<IInjectedLogic>()))
+				.Returns((IInjectedLogic) null)
+				.Verifiable();
+
+			pipeline.Add(firstLogic.Object);
+			pipeline.Add(lastLogic.Object);
+
+			pipeline.ExecutePreCondition(new object(), typeof(object).GetMethod("ToString"), new object[0]);
+
+			lastLogic.Verify(l => l.BeforeExecute(
+				It.IsAny<object>(),
+					It.IsAny<MethodInfo>(),
+					It.IsAny<object[]>(),
+					It.IsAny<IInjectedLogic>()), Times.Never()
+				);
+		}
+
+		[Fact]
+		public void ExecutePostCondition_WillNotCallAnotherLogicIfPreviousReturnsNull() {
+			IInjectedPipeline pipeline = new InjectedPipeline();
+			var firstLogic = new Mock<IInjectedLogic>();
+			var lastLogic = new Mock<IInjectedLogic>();
+			lastLogic.Setup(
+				l => l.AfterExecute(
+					It.IsAny<object>(),
+					It.IsAny<MethodInfo>(),
+					It.IsAny<object[]>(),
+					It.IsAny<IInjectedLogic>()))
+				.Returns((IInjectedLogic) null)
+				.Verifiable();
+
+			pipeline.Add(firstLogic.Object);
+			pipeline.Add(lastLogic.Object);
+
+			pipeline.ExecutePostCondition(new object(), typeof(object).GetMethod("ToString"), new object[0]);
+
+			firstLogic.Verify(l => l.AfterExecute(
+				It.IsAny<object>(),
+					It.IsAny<MethodInfo>(),
+					It.IsAny<object[]>(),
+					It.IsAny<IInjectedLogic>()), Times.Never()
+				);
+		}
+
+		[Fact]
 		public void ExecutePreCondition_DoesNotThrow_WithoutLogic() {
 			IInjectedPipeline pipeline = new InjectedPipeline();
 

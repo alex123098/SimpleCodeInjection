@@ -16,7 +16,11 @@ namespace CodeInjection
 			var logic = _registeredLogics.First;
 			while (logic != null) {
 				var nextLogic = logic.Next;
-				logic.Value.BeforeExecute(target, invokedMethodInfo, arguments, nextLogic == null ? null : nextLogic.Value);
+				var logicToExecute = logic.Value.BeforeExecute(target, invokedMethodInfo, arguments, nextLogic == null ? null : nextLogic.Value);
+				if (logicToExecute == null) {
+					break;
+				}
+				nextLogic = _registeredLogics.Find(logicToExecute);
 				logic = nextLogic;
 			}
 		}
@@ -25,7 +29,11 @@ namespace CodeInjection
 			var logic = _registeredLogics.Last;
 			while (logic != null) {
 				var prevLogic = logic.Previous;
-				logic.Value.AfterExecute(target, invokedMethodInfo, arguments, prevLogic == null ? null : prevLogic.Value);
+				var logicToExecute = logic.Value.AfterExecute(target, invokedMethodInfo, arguments, prevLogic == null ? null : prevLogic.Value);
+				if (logicToExecute == null) {
+					break;
+				}
+				prevLogic = _registeredLogics.Find(logicToExecute);
 				logic = prevLogic;
 			}
 		}
