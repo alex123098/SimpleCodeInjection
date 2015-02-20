@@ -7,29 +7,24 @@ using System.Reflection.Emit;
 
 namespace CodeInjection
 {
-	public class ProxyBuilder<T>
+	public class ProxyFactory : IProxyFactory
 	{
-		private readonly T _realInstance;
-		private readonly IInjectedPipeline _injectedPipeline;
+		private readonly ModuleBuilder _moduleBuilder;
 
-		public ProxyBuilder(T realInstance, IInjectedPipeline injectedPipeline) {
-			Contract.Requires(realInstance != null);
-			Contract.Requires(injectedPipeline != null);
-
-			_realInstance = realInstance;
-			_injectedPipeline = injectedPipeline;
-		}
-
-		public Type BuildProxyType(ModuleBuilder moduleBuilder) {
-
+		public ProxyFactory(ModuleBuilder moduleBuilder) {
 			Contract.Requires(moduleBuilder != null);
 
+			_moduleBuilder = moduleBuilder;
+		}
+
+		public Type CreateProxyType<T>(T realInstance, IInjectedPipeline injectedPipeline) {
+
 			var typeAttributes = CreateProxyTypeAttributes();
-			var typeName = GenerateTypeName();
+			var typeName = GenerateTypeName<T>();
 			var parentType = typeof(object);
-			var interfaces = GetAllTypeInterfaces();
+			var interfaces = GetAllTypeInterfaces<T>();
 			// create a type
-			var typeBuilder = moduleBuilder.DefineType(typeName, typeAttributes, parentType, interfaces);
+			var typeBuilder = _moduleBuilder.DefineType(typeName, typeAttributes, parentType, interfaces);
 
 			// define a field for a pipeline
 			var pipelineFieldName = GenerateFieldName("_pipeline");
@@ -222,12 +217,12 @@ namespace CodeInjection
 			return string.Concat(prefix, Guid.NewGuid().ToString("N"));
 		}
 
-		private Type[] GetAllTypeInterfaces() {
+		private Type[] GetAllTypeInterfaces<T>() {
 			var type = typeof(T);
 			return type.IsInterface ? new[] { type } : type.GetInterfaces();
 		}
 
-		private string GenerateTypeName() {
+		private string GenerateTypeName<T>() {
 			return string.Concat(typeof(T).FullName, Guid.NewGuid().ToString("N"), "Proxy");
 		}
 
@@ -239,8 +234,7 @@ namespace CodeInjection
 
 		[ContractInvariantMethod]
 		private void ContractInvariant() {
-			Contract.Invariant(_realInstance != null);
-			Contract.Invariant(_injectedPipeline != null);
+			Contract.Invariant(_moduleBuilder != null);
 		}
 	}
 

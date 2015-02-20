@@ -48,6 +48,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CacheableProxyFactoryTests.cs" />
     <Compile Include="InjectedPipelineTests.cs" />
     <Compile Include="LogicInjectorTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

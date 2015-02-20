@@ -7,6 +7,8 @@ namespace CodeInjection
 	public interface ILogicInjector
 	{
 		T CreateProxyFor<T>(T realInstance, IInjectedPipeline injectedPipeline);
+
+		IProxyFactory ProxyFactory { get; set; }
 	}
 
 	[ContractClassFor(typeof(ILogicInjector))]
@@ -16,6 +18,17 @@ namespace CodeInjection
 			Contract.Requires(realInstance != null);
 			Contract.Requires(injectedPipeline != null);
 			throw new NotImplementedException();
+		}
+
+		public IProxyFactory ProxyFactory {
+			[Pure] get {
+				Contract.Ensures(Contract.Result<IProxyFactory>() != null);
+				throw new NotImplementedException();
+			}
+			set {
+				Contract.Requires(value != null);
+				throw new NotImplementedException();
+			}
 		}
 	}
 }

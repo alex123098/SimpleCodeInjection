@@ -18,6 +18,25 @@ namespace CodeInjection.Tests
 		}
 
 		[Fact]
+		public void CreateProxy_WillCall_ProxyFactory() {
+			ILogicInjector injector = new LogicInjector();
+			var testInstance = new Mock<IInjectionTest>();
+			var pipelineMock = new Mock<IInjectedPipeline>();
+			var proxyFactoryMock = new Mock<IProxyFactory>();
+			proxyFactoryMock
+				.Setup(pf => pf.CreateProxyType(It.IsAny<IInjectionTest>(), pipelineMock.Object))
+				.Returns(typeof(ProxyInjectionTest))
+				.Verifiable();
+			injector.ProxyFactory = proxyFactoryMock.Object;
+
+			injector.CreateProxyFor(testInstance.Object, pipelineMock.Object);
+
+			proxyFactoryMock.Verify(
+				pf => pf.CreateProxyType(testInstance.Object, pipelineMock.Object),
+				Times.Once);
+		}
+
+		[Fact]
 		public void CreateProxy_CreatedProxyWillActivatePreExecutePipeline() {
 			ILogicInjector injector = new LogicInjector();
 			var testInstance = new Mock<IInjectionTest>();
@@ -89,5 +108,17 @@ namespace CodeInjection.Tests
 		void TestVoidMethod();
 
 		void TestVoidWithArgs(string stArg, int intArg, SimpleEnum enumArg);
+	}
+
+	public class ProxyInjectionTest : IInjectionTest
+	{
+		public ProxyInjectionTest(IInjectedPipeline p, IInjectionTest t) { }
+
+		public void TestVoidMethod() {
+			
+		}
+
+		public void TestVoidWithArgs(string stArg, int intArg, SimpleEnum enumArg) {
+		}
 	}
 }
