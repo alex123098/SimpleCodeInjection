@@ -11,10 +11,11 @@ namespace CodeInjection
 	{
 		private readonly ModuleBuilder _moduleBuilder;
 
-		public ProxyFactory(ModuleBuilder moduleBuilder) {
-			Contract.Requires(moduleBuilder != null);
+		public ProxyFactory() {
 
-			_moduleBuilder = moduleBuilder;
+			var assemblyName = new AssemblyName(Guid.NewGuid().ToString());
+			var assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
+			_moduleBuilder = assemblyBuilder.DefineDynamicModule(Guid.NewGuid().ToString());
 		}
 
 		public Type CreateProxyType<T>(T realInstance, IInjectedPipeline injectedPipeline) {

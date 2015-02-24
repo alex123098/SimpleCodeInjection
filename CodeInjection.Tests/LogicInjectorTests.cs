@@ -24,16 +24,45 @@ namespace CodeInjection.Tests
 			var testInstance = new Mock<IInjectionTest>();
 			var pipelineMock = new Mock<IInjectedPipeline>();
 			var proxyFactoryMock = new Mock<IProxyFactory>();
+			var activatorFactoryMock = new Mock<IActivatorFactory>();
 			proxyFactoryMock
 				.Setup(pf => pf.CreateProxyType(It.IsAny<IInjectionTest>(), pipelineMock.Object))
 				.Returns(typeof(ProxyInjectionTest))
 				.Verifiable();
+			activatorFactoryMock
+				.Setup(af => af.CreateActivatorOf<IInjectionTest>(typeof (ProxyInjectionTest)))
+				.Returns((pipeline, instance) => new ProxyInjectionTest(pipeline, instance));
 			injector.ProxyFactory = proxyFactoryMock.Object;
+			injector.ActivatorFactory = activatorFactoryMock.Object;
 
 			injector.CreateProxyFor(testInstance.Object, pipelineMock.Object);
 
 			proxyFactoryMock.Verify(
 				pf => pf.CreateProxyType(testInstance.Object, pipelineMock.Object),
+				Times.Once);
+		}
+
+		[Fact]
+		public void CreateProxy_WillRequestActivatorFactory() {
+			ILogicInjector injector = new LogicInjector();
+			var testInstance = new Mock<IInjectionTest>();
+			var pipelineMock = new Mock<IInjectedPipeline>();
+			var proxyFactoryMock = new Mock<IProxyFactory>();
+			var activatorFactoryMock = new Mock<IActivatorFactory>();
+			proxyFactoryMock
+				.Setup(pf => pf.CreateProxyType(It.IsAny<IInjectionTest>(), pipelineMock.Object))
+				.Returns(typeof (ProxyInjectionTest));
+			activatorFactoryMock
+				.Setup(af => af.CreateActivatorOf<IInjectionTest>(typeof(ProxyInjectionTest)))
+				.Returns((pipeline, instance) => new ProxyInjectionTest(pipeline, instance))
+				.Verifiable();
+			injector.ProxyFactory = proxyFactoryMock.Object;
+			injector.ActivatorFactory = activatorFactoryMock.Object;
+
+			injector.CreateProxyFor(testInstance.Object, pipelineMock.Object);
+
+			activatorFactoryMock.Verify(
+				af => af.CreateActivatorOf<IInjectionTest>(typeof(ProxyInjectionTest)), 
 				Times.Once);
 		}
 
