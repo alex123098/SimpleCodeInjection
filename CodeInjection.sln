@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeInjection", "CodeInject
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeInjection.Tests", "CodeInjection.Tests\CodeInjection.Tests.csproj", "{DFD00C20-FE8A-48CD-96C6-01A19A97CBB5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeInjection.SampleApp", "CodeInjection.SampleApp\CodeInjection.SampleApp.csproj", "{CB0D791E-A52D-4D64-A4C6-20E0D128C657}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{DFD00C20-FE8A-48CD-96C6-01A19A97CBB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DFD00C20-FE8A-48CD-96C6-01A19A97CBB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DFD00C20-FE8A-48CD-96C6-01A19A97CBB5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CB0D791E-A52D-4D64-A4C6-20E0D128C657}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CB0D791E-A52D-4D64-A4C6-20E0D128C657}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CB0D791E-A52D-4D64-A4C6-20E0D128C657}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CB0D791E-A52D-4D64-A4C6-20E0D128C657}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
