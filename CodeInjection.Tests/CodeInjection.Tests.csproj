@@ -48,10 +48,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CacheableActivatorFactoryTests.cs" />
     <Compile Include="CacheableProxyFactoryTests.cs" />
+    <Compile Include="DynamicActivatorFactoryTests.cs" />
     <Compile Include="InjectedPipelineTests.cs" />
     <Compile Include="LogicInjectorTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReflectionActivatorFactoryTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
