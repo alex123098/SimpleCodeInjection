@@ -1,16 +1,26 @@
 ﻿using System;
+using System.Linq;
 
 namespace CodeInjection.SampleApp
 {
-	public interface ISampleService
-	{
-		void DoSomethingUseful(string clientName);
-	}
+    public interface ISampleService
+    {
+        void DoSomethingUseful();
+    }
 
-	public class SampleService : ISampleService
-	{
-		public void DoSomethingUseful(string clientName) {
-			Console.WriteLine("Did something useful for {0}", clientName);
-		}
-	}
+    public class SampleService : ISampleService
+    {
+        private readonly Random _random = new Random();
+        private readonly int[] _values;
+
+        public SampleService()
+        {
+            _values = Enumerable.Repeat(0, 10_000_000).Select(_ => _random.Next()).ToArray();
+        }
+        
+        public void DoSomethingUseful()
+        {
+            Array.Sort(_values);
+        }
+    }
 }

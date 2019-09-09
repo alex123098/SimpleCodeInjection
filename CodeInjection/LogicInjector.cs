@@ -1,59 +1,56 @@
-﻿using System.Diagnostics.Contracts;
+﻿using System;
+using JetBrains.Annotations;
 
 namespace CodeInjection
 {
-	public class LogicInjector : ILogicInjector
-	{
-		private IProxyFactory _proxyFactory;
-		private IActivatorFactory _activatorFactory;
+    public class LogicInjector : ILogicInjector
+    {
+        private IActivatorFactory _activatorFactory;
+        private IProxyFactory _proxyFactory;
 
-		public IProxyFactory ProxyFactory {
-			[Pure]
-			get {
-				Contract.Ensures(Contract.Result<IProxyFactory>() != null);
-				return _proxyFactory;
-			}
-			set {
-				_proxyFactory = value;
-			}
-		}
+        public LogicInjector()
+        {
+            SetDefaultProxyFactory();
+            SetDefaultActivatorFactory();
+        }
 
-		public IActivatorFactory ActivatorFactory {
-			[Pure]
-			get {
-				Contract.Ensures(Contract.Result<IActivatorFactory>() != null);
-				return _activatorFactory;
-			}
-			set {
-				_activatorFactory = value;
-			}
-		}
+        [NotNull]
+        public IProxyFactory ProxyFactory
+        {
+            get => _proxyFactory;
+            set => _proxyFactory = value ?? throw new ArgumentNullException();
+        }
 
-		public LogicInjector() {
-			Contract.Ensures(ProxyFactory != null);
+        [NotNull]
+        public IActivatorFactory ActivatorFactory
+        {
+            get => _activatorFactory;
+            set => _activatorFactory = value ?? throw new ArgumentNullException();
+        }
 
-			SetDefaultProxyFactory();
-			SetDefaultActivatorFactory();
-		}
+        public TResult CreateProxyFor<T, TResult>([NotNull] T realInstance, [NotNull] IInjectedPipeline injectedPipeline) where T : TResult
+        {
+            if (realInstance == null) throw new ArgumentNullException(nameof(realInstance));
+            if (injectedPipeline == null) throw new ArgumentNullException(nameof(injectedPipeline));
 
-		public T CreateProxyFor<T>(T realInstance, IInjectedPipeline injectedPipeline) {
-			var proxyType = ProxyFactory.CreateProxyType(realInstance, injectedPipeline);
-			var activator = ActivatorFactory.CreateActivatorOf<T>(proxyType);
-			return (T) activator.Invoke(injectedPipeline, realInstance);
-		}
+            var proxyType = ProxyFactory.CreateProxyType(realInstance, injectedPipeline);
+            var activator = ActivatorFactory.CreateActivatorOf<T>(proxyType);
+            return (TResult) activator.Invoke(injectedPipeline, realInstance);
+        }
 
-		private void SetDefaultProxyFactory() {
-			_proxyFactory = new CacheableProxyFactory(new ProxyFactory());
-		}
+        public T CreateProxyFor<T>([NotNull] T realInstance, [NotNull] IInjectedPipeline injectedPipeline)
+        {
+            return CreateProxyFor<T, T>(realInstance, injectedPipeline);
+        }
 
-		private void SetDefaultActivatorFactory() {
-			_activatorFactory = new CacheableActivatorFactory(new DynamicActivatorFactory());
-		}
+        private void SetDefaultProxyFactory()
+        {
+            _proxyFactory = new CacheableProxyFactory(new ProxyFactory());
+        }
 
-		[ContractInvariantMethod]
-		private void ContractInvariants() {
-			Contract.Invariant(_proxyFactory != null);
-			Contract.Invariant(_activatorFactory != null);
-		}
-	}
+        private void SetDefaultActivatorFactory()
+        {
+            _activatorFactory = new CacheableActivatorFactory(new DynamicActivatorFactory());
+        }
+    }
 }

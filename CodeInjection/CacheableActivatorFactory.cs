@@ -1,43 +1,35 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 
 namespace CodeInjection
 {
-	public class CacheableActivatorFactory : IActivatorFactory
-	{
-		private readonly IActivatorFactory _decoratedActivatorFactory;
-		private readonly ConcurrentDictionary<string, object> _cachedFactories;
+    public class CacheableActivatorFactory : IActivatorFactory
+    {
+        private readonly ConcurrentDictionary<string, object> _cachedFactories;
+        private readonly IActivatorFactory _decoratedActivatorFactory;
 
-		public CacheableActivatorFactory(IActivatorFactory activatorFactory) {
-			Contract.Requires(activatorFactory != null);
-			_decoratedActivatorFactory = activatorFactory;
-			_cachedFactories = new ConcurrentDictionary<string, object>();
-		}
+        public CacheableActivatorFactory(IActivatorFactory activatorFactory)
+        {
+            _decoratedActivatorFactory = activatorFactory ?? throw new ArgumentNullException(nameof(activatorFactory));
+            _cachedFactories = new ConcurrentDictionary<string, object>();
+        }
 
-		public FactoryMethodDelegate<T> CreateActivatorOf<T>(Type exactType) {
-			object cachedFactory;
-			var key = GetKeyFor(typeof (T), exactType);
-			if (_cachedFactories.TryGetValue(key, out cachedFactory)) {
-				return (FactoryMethodDelegate<T>) cachedFactory;
-			}
-			cachedFactory = _decoratedActivatorFactory.CreateActivatorOf<T>(exactType);
-			_cachedFactories.TryAdd(key, cachedFactory);
-			return (FactoryMethodDelegate<T>) cachedFactory;
-		}
+        public FactoryMethodDelegate<T> CreateActivatorOf<T>([NotNull] Type exactType)
+        {
+            if (exactType == null) throw new ArgumentNullException(nameof(exactType));
 
-		private string GetKeyFor(Type abstractType, Type exactType) {
-			Contract.Requires(abstractType != null);
-			Contract.Requires(exactType != null);
-			Contract.Ensures(Contract.Result<string>() != null);
+            var key = GetKeyFor(typeof(T), exactType);
+            if (_cachedFactories.TryGetValue(key, out var cachedFactory)) return (FactoryMethodDelegate<T>) cachedFactory;
 
-			return string.Concat(abstractType.FullName, "##", exactType.FullName);
-		}
+            cachedFactory = _decoratedActivatorFactory.CreateActivatorOf<T>(exactType);
+            _cachedFactories.TryAdd(key, cachedFactory);
+            return (FactoryMethodDelegate<T>) cachedFactory;
+        }
 
-		[ContractInvariantMethod]
-		private void ContractInvariants() {
-			Contract.Invariant(_decoratedActivatorFactory != null);
-			Contract.Invariant(_cachedFactories != null);
-		}
-	}
+        private string GetKeyFor([NotNull] Type abstractType, [NotNull] Type exactType)
+        {
+            return string.Concat(abstractType.FullName, "##", exactType.FullName);
+        }
+    }
 }

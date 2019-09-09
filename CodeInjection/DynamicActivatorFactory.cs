@@ -2,31 +2,33 @@
 using System.Diagnostics.Contracts;
 using System.Reflection;
 using System.Reflection.Emit;
+using JetBrains.Annotations;
 
 namespace CodeInjection
 {
-	public class DynamicActivatorFactory : IActivatorFactory
-	{
-		public FactoryMethodDelegate<T> CreateActivatorOf<T>(Type exactType) {
-			var ctor = exactType.GetConstructor(new[] { typeof(IInjectedPipeline), typeof(T) });
-			Contract.Assume(ctor != null);
+    public class DynamicActivatorFactory : IActivatorFactory
+    {
+        public FactoryMethodDelegate<T> CreateActivatorOf<T>([NotNull] Type exactType)
+        {
+            if (exactType == null) throw new ArgumentNullException(nameof(exactType));
 
-			var factoryMethodBuilder = new DynamicMethod(typeof(T).Name + Guid.NewGuid().ToString("N"),
-				exactType,
-				new[] { typeof(IInjectedPipeline), typeof(T) });
-			EmitFactoryBody(factoryMethodBuilder.GetILGenerator(), ctor);
+            var ctor = exactType.GetConstructor(new[] { typeof(IInjectedPipeline), typeof(T) });
+            Contract.Assume(ctor != null);
 
-			return (FactoryMethodDelegate<T>) factoryMethodBuilder.CreateDelegate(typeof(FactoryMethodDelegate<T>));
-		}
+            var factoryMethodBuilder = new DynamicMethod(typeof(T).Name + Guid.NewGuid().ToString("N"),
+                exactType,
+                new[] { typeof(IInjectedPipeline), typeof(T) });
+            EmitFactoryBody(factoryMethodBuilder.GetILGenerator(), ctor);
 
-		private void EmitFactoryBody(ILGenerator il, ConstructorInfo constructor) {
-			Contract.Requires(il != null);
-			Contract.Requires(constructor != null);
+            return (FactoryMethodDelegate<T>) factoryMethodBuilder.CreateDelegate(typeof(FactoryMethodDelegate<T>));
+        }
 
-			il.Emit(OpCodes.Ldarg_0);
-			il.Emit(OpCodes.Ldarg_1);
-			il.Emit(OpCodes.Newobj, constructor);
-			il.Emit(OpCodes.Ret);
-		}
-	}
+        private void EmitFactoryBody([NotNull] ILGenerator il, [NotNull] ConstructorInfo constructor)
+        {
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Newobj, constructor);
+            il.Emit(OpCodes.Ret);
+        }
+    }
 }

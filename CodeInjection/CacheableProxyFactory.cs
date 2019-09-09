@@ -1,47 +1,44 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 
 namespace CodeInjection
 {
-	public class CacheableProxyFactory : IProxyFactory
-	{
-		private readonly IProxyFactory _decoratedFactory;
-		private readonly ConcurrentDictionary<string, Type> _proxyCache;
+    public class CacheableProxyFactory : IProxyFactory
+    {
+        private readonly IProxyFactory _decoratedFactory;
+        private readonly ConcurrentDictionary<string, Type> _proxyCache;
 
-		public CacheableProxyFactory(IProxyFactory proxyFactory) {
-			Contract.Requires(proxyFactory != null);
+        public CacheableProxyFactory([NotNull] IProxyFactory proxyFactory)
+        {
+            _decoratedFactory = proxyFactory ?? throw new ArgumentNullException(nameof(proxyFactory));
+            _proxyCache = new ConcurrentDictionary<string, Type>();
+        }
 
-			_decoratedFactory = proxyFactory;
-			_proxyCache = new ConcurrentDictionary<string, Type>();
-		}
+        public Type CreateProxyType<T>([NotNull] T realInstance, [NotNull] IInjectedPipeline injectedPipeline)
+        {
+            if (realInstance == null) throw new ArgumentNullException(nameof(realInstance));
+            if (injectedPipeline == null) throw new ArgumentNullException(nameof(injectedPipeline));
 
-		public Type CreateProxyType<T>(T realInstance, IInjectedPipeline injectedPipeline) {
-			Type proxyType;
-			var instanceType = realInstance.GetType();
-			var pipelineType = injectedPipeline.GetType();
-			var proxyKey = GetProxyKey(instanceType, pipelineType);
+            var instanceType = realInstance.GetType();
+            var pipelineType = injectedPipeline.GetType();
+            var proxyKey = GetProxyKey(instanceType, pipelineType);
 
-			if (_proxyCache.TryGetValue(proxyKey, out proxyType)) {
-				Contract.Assume(typeof(T).IsAssignableFrom(proxyType));
-				return proxyType;
-			}
-			proxyType = _decoratedFactory.CreateProxyType(realInstance, injectedPipeline);
-			_proxyCache.TryAdd(proxyKey, proxyType);
-			return proxyType;
-		}
+            if (_proxyCache.TryGetValue(proxyKey, out var proxyType))
+            {
+                Contract.Assume(typeof(T).IsAssignableFrom(proxyType));
+                return proxyType;
+            }
 
-		private string GetProxyKey(Type instanceType, Type pipelineType) {
-			Contract.Assume(instanceType != null);
-			Contract.Assume(pipelineType != null);
+            proxyType = _decoratedFactory.CreateProxyType(realInstance, injectedPipeline);
+            _proxyCache.TryAdd(proxyKey, proxyType);
+            return proxyType;
+        }
 
-			return string.Concat(instanceType.FullName, "##", pipelineType.FullName);
-		}
-
-		[ContractInvariantMethod]
-		private void ContractInvariants() {
-			Contract.Invariant(_decoratedFactory != null);
-			Contract.Invariant(_proxyCache != null);
-		}
-	}
+        private string GetProxyKey([NotNull] Type instanceType, [NotNull] Type pipelineType)
+        {
+            return string.Concat(instanceType.FullName, "##", pipelineType.FullName);
+        }
+    }
 }
