@@ -1,87 +1,45 @@
 ﻿using System;
-using System.Diagnostics;
-using System.IO;
 using System.Reflection;
+using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Engines;
+using BenchmarkDotNet.Running;
 
 namespace CodeInjection.SampleApp
 {
-    internal class Program
+//    [SimpleJob(RunStrategy.ColdStart, launchCount:10)]
+    public class Cases
+    {
+        private readonly ISampleService _manuallyDecorated;
+        private readonly ISampleService _injectorDecorated;
+
+        public Cases()
+        {
+            var sampleService = new SampleService();
+            var defaultInjector = new LogicInjector();
+            var pipeline = new InjectedPipeline();
+            pipeline.Add(new LogToConsoleInjectionLogic());
+            _manuallyDecorated = new HardCodedDecorator(sampleService);
+            _injectorDecorated = defaultInjector.CreateProxyFor<SampleService, ISampleService>(sampleService, pipeline);
+        }
+
+        [Benchmark]
+        public void ClassicDecorator()
+        {
+            _manuallyDecorated.DoSomethingUseful();
+        }
+
+        [Benchmark]
+        public void DefaultInjector()
+        {
+            _injectorDecorated.DoSomethingUseful();
+        }
+    }
+    
+    internal static class Program
     {
         private static void Main()
         {
-            var sampleService = new SampleService();
-            var codeInjector = new LogicInjector();
-            var pipeline = new InjectedPipeline();
-            //codeInjector.ProxyFactory = new ProxyFactory();
-            pipeline.Add(new LogToConsoleInjectionLogic());
-            //codeInjector.ActivatorFactory = new ReflectionActivatorFactory();
-
-            Console.WriteLine("Press \"S\" for simple test.");
-            Console.WriteLine("Press \"T\" for performance test.");
-            Console.WriteLine("Press \"Q\" to exit.");
-
-            do
-            {
-                var key = Console.ReadKey();
-                switch (key.Key)
-                {
-                    case ConsoleKey.S:
-                        StandardInvocation(codeInjector, sampleService, pipeline);
-                        break;
-                    case ConsoleKey.T:
-                        StartLoadTest(codeInjector, sampleService, pipeline);
-                        break;
-                    case ConsoleKey.Q:
-                        return;
-                }
-            } while (true);
-        }
-
-        private static void StartLoadTest(ILogicInjector codeInjector, ISampleService sampleService,
-            IInjectedPipeline pipeline)
-        {
-            var oldOut = Console.Out;
-            Console.SetOut(new StringWriter());
-            var stopWatch = new Stopwatch();
-            stopWatch.Start();
-            for (var i = 0; i < 1000; i++) CallService(codeInjector, sampleService, pipeline, "test");
-            stopWatch.Stop();
-            Console.SetOut(oldOut);
-
-            Console.WriteLine();
-            Console.WriteLine("1000 calls of dynamic decorator with constructor: {0}", stopWatch.Elapsed);
-            GC.Collect();
-
-            Console.SetOut(new StringWriter());
-            stopWatch.Reset();
-            stopWatch.Start();
-            for (var i = 0; i < 1000; i++)
-            {
-                var dec = new HardCodedDecorator(sampleService);
-                dec.DoSomethingUseful("test");
-            }
-
-            stopWatch.Stop();
-            Console.SetOut(oldOut);
-
-            Console.WriteLine("1000 calls of classic decorator with constructor: {0}", stopWatch.Elapsed);
-        }
-
-        private static void CallService(ILogicInjector codeInjector, ISampleService sampleService,
-            IInjectedPipeline pipeline, string clientName)
-        {
-            var decoratedService = codeInjector.CreateProxyFor(sampleService, pipeline);
-            decoratedService.DoSomethingUseful(clientName);
-        }
-
-        private static void StandardInvocation(ILogicInjector codeInjector, ISampleService sampleService,
-            IInjectedPipeline pipeline)
-        {
-            Console.WriteLine();
-            Console.Write("Enter client name: ");
-            var clientName = Console.ReadLine();
-
-            CallService(codeInjector, sampleService, pipeline, clientName);
+            BenchmarkRunner.Run<Cases>();
         }
     }
 
@@ -96,7 +54,7 @@ namespace CodeInjection.SampleApp
             _doSomethingUsefulMethodInfo = _service.GetType().GetMethod("DoSomethingUseful");
         }
 
-        public void DoSomethingUseful(string clientName)
+        public void DoSomethingUseful()
         {
             var targetType = _service.GetType();
 
@@ -107,7 +65,7 @@ namespace CodeInjection.SampleApp
             Console.WriteLine();
             Console.ResetColor();
 
-            _service.DoSomethingUseful(clientName);
+            _service.DoSomethingUseful();
 
             Console.ForegroundColor = ConsoleColor.DarkGray;
             Console.WriteLine();

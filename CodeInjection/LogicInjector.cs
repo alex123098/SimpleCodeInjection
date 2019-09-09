@@ -28,14 +28,19 @@ namespace CodeInjection
             set => _activatorFactory = value ?? throw new ArgumentNullException();
         }
 
-        public T CreateProxyFor<T>([NotNull] T realInstance, [NotNull] IInjectedPipeline injectedPipeline)
+        public TResult CreateProxyFor<T, TResult>([NotNull] T realInstance, [NotNull] IInjectedPipeline injectedPipeline) where T : TResult
         {
             if (realInstance == null) throw new ArgumentNullException(nameof(realInstance));
             if (injectedPipeline == null) throw new ArgumentNullException(nameof(injectedPipeline));
 
             var proxyType = ProxyFactory.CreateProxyType(realInstance, injectedPipeline);
             var activator = ActivatorFactory.CreateActivatorOf<T>(proxyType);
-            return (T) activator.Invoke(injectedPipeline, realInstance);
+            return (TResult) activator.Invoke(injectedPipeline, realInstance);
+        }
+
+        public T CreateProxyFor<T>([NotNull] T realInstance, [NotNull] IInjectedPipeline injectedPipeline)
+        {
+            return CreateProxyFor<T, T>(realInstance, injectedPipeline);
         }
 
         private void SetDefaultProxyFactory()
