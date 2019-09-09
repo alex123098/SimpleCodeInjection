@@ -1,0 +1,14 @@
+name: A workflow for my Hello World file
+on: push
+jobs:
+  greet:
+    name: Build application
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - uses: ./build/test
+    - uses: ./build/publish
+    - uses: actions/upload-artifact@master
+      with:
+        name: SimpleCodeInjection
+        path: out
