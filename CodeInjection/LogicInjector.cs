@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.Contracts;
+﻿using System;
+using JetBrains.Annotations;
 
 namespace CodeInjection
 {
@@ -9,36 +10,29 @@ namespace CodeInjection
 
         public LogicInjector()
         {
-            Contract.Ensures(ProxyFactory != null);
-
             SetDefaultProxyFactory();
             SetDefaultActivatorFactory();
         }
 
+        [NotNull]
         public IProxyFactory ProxyFactory
         {
-            [Pure]
-            get
-            {
-                Contract.Ensures(Contract.Result<IProxyFactory>() != null);
-                return _proxyFactory;
-            }
-            set => _proxyFactory = value;
+            get => _proxyFactory;
+            set => _proxyFactory = value ?? throw new ArgumentNullException();
         }
 
+        [NotNull]
         public IActivatorFactory ActivatorFactory
         {
-            [Pure]
-            get
-            {
-                Contract.Ensures(Contract.Result<IActivatorFactory>() != null);
-                return _activatorFactory;
-            }
-            set => _activatorFactory = value;
+            get => _activatorFactory;
+            set => _activatorFactory = value ?? throw new ArgumentNullException();
         }
 
-        public T CreateProxyFor<T>(T realInstance, IInjectedPipeline injectedPipeline)
+        public T CreateProxyFor<T>([NotNull] T realInstance, [NotNull] IInjectedPipeline injectedPipeline)
         {
+            if (realInstance == null) throw new ArgumentNullException(nameof(realInstance));
+            if (injectedPipeline == null) throw new ArgumentNullException(nameof(injectedPipeline));
+
             var proxyType = ProxyFactory.CreateProxyType(realInstance, injectedPipeline);
             var activator = ActivatorFactory.CreateActivatorOf<T>(proxyType);
             return (T) activator.Invoke(injectedPipeline, realInstance);
@@ -52,13 +46,6 @@ namespace CodeInjection
         private void SetDefaultActivatorFactory()
         {
             _activatorFactory = new CacheableActivatorFactory(new DynamicActivatorFactory());
-        }
-
-        [ContractInvariantMethod]
-        private void ContractInvariants()
-        {
-            Contract.Invariant(_proxyFactory != null);
-            Contract.Invariant(_activatorFactory != null);
         }
     }
 }

@@ -26,7 +26,7 @@ namespace CodeInjection.SampleApp
                 switch (key.Key)
                 {
                     case ConsoleKey.S:
-                        StandartInvokation(codeInjector, sampleService, pipeline);
+                        StandardInvocation(codeInjector, sampleService, pipeline);
                         break;
                     case ConsoleKey.T:
                         StartLoadTest(codeInjector, sampleService, pipeline);
@@ -74,7 +74,7 @@ namespace CodeInjection.SampleApp
             decoratedService.DoSomethingUseful(clientName);
         }
 
-        private static void StandartInvokation(ILogicInjector codeInjector, ISampleService sampleService,
+        private static void StandardInvocation(ILogicInjector codeInjector, ISampleService sampleService,
             IInjectedPipeline pipeline)
         {
             Console.WriteLine();

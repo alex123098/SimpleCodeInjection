@@ -4,6 +4,7 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using JetBrains.Annotations;
 
 namespace CodeInjection
 {
@@ -18,8 +19,11 @@ namespace CodeInjection
             _moduleBuilder = assemblyBuilder.DefineDynamicModule(Guid.NewGuid().ToString());
         }
 
-        public Type CreateProxyType<T>(T realInstance, IInjectedPipeline injectedPipeline)
+        public Type CreateProxyType<T>([NotNull] T realInstance, [NotNull] IInjectedPipeline injectedPipeline)
         {
+            if (realInstance == null) throw new ArgumentNullException(nameof(realInstance));
+            if (injectedPipeline == null) throw new ArgumentNullException(nameof(injectedPipeline));
+
             var typeAttributes = CreateProxyTypeAttributes();
             var typeName = GenerateTypeName<T>();
             var parentType = typeof(object);
@@ -57,25 +61,17 @@ namespace CodeInjection
             return typeBuilder.CreateTypeInfo();
         }
 
-        [ContractInvariantMethod]
-        private void ContractInvariant()
-        {
-            Contract.Invariant(_moduleBuilder != null);
-        }
-
         #region Emit methods
 
         private void EmitInterfaceImplementation(
-            Type @interface,
-            TypeBuilder typeBuilder,
-            FieldBuilder pipelineField,
-            FieldBuilder realInstanceField)
+            [NotNull] Type @interface,
+            [NotNull] TypeBuilder typeBuilder,
+            [NotNull] FieldBuilder pipelineField,
+            [NotNull] FieldBuilder realInstanceField)
         {
-            Contract.Requires(@interface != null);
-            Contract.Requires(typeBuilder != null);
-            Contract.Requires(pipelineField != null);
-            Contract.Requires(realInstanceField != null);
-
+            if (@interface.FullName == null) 
+                throw new NotSupportedException("Interface without FullName is not supported");
+            
             var interfaceMethods = @interface.GetMethods();
             for (var i = 0; i < interfaceMethods.Length; i++)
             {
@@ -102,20 +98,13 @@ namespace CodeInjection
         }
 
         private void EmitMethodDefinition(
-            string interfaceName,
+            [NotNull] string interfaceName,
             int methodIndex,
-            ILGenerator il,
-            FieldInfo pipelineField,
-            FieldInfo realInstanceField,
-            MethodInfo methodInfo)
+            [NotNull] ILGenerator il,
+            [NotNull] FieldInfo pipelineField,
+            [NotNull] FieldInfo realInstanceField,
+            [NotNull] MethodInfo methodInfo)
         {
-            Contract.Requires(interfaceName != null);
-            Contract.Requires(il != null);
-            Contract.Requires(pipelineField != null);
-            Contract.Requires(realInstanceField != null);
-            Contract.Requires(methodInfo != null);
-            Contract.Requires(methodIndex > -1);
-
             // declare array of parameters for a method
             var methodParameters = methodInfo.GetParameters();
             il.DeclareLocal(typeof(object[]));
@@ -146,7 +135,7 @@ namespace CodeInjection
             il.Emit(OpCodes.Ldfld, pipelineField);
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldfld, realInstanceField);
-            // call MethodMetadataContainer.GetMethodInfo. Unfortunatelly this is the only way to load method info to stack :(
+            // call MethodMetadataContainer.GetMethodInfo. Unfortunately this is the only way to load method info to stack :(
             il.Emit(OpCodes.Ldstr, interfaceName);
             il.Emit(OpCodes.Ldc_I4, methodIndex);
             il.Emit(OpCodes.Call, typeof(MethodMetadataContainer).GetMethod("GetMethodInfo"));
@@ -168,7 +157,7 @@ namespace CodeInjection
             il.Emit(OpCodes.Ldfld, pipelineField);
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldfld, realInstanceField);
-            // call MethodMetadataContainer.GetMethodInfo. Unfortunatelly this is the only way to load method info to stack :(
+            // call MethodMetadataContainer.GetMethodInfo. Unfortunately this is the only way to load method info to stack :(
             il.Emit(OpCodes.Ldstr, interfaceName);
             il.Emit(OpCodes.Ldc_I4, methodIndex);
             il.Emit(OpCodes.Call, typeof(MethodMetadataContainer).GetMethod("GetMethodInfo"));
@@ -183,14 +172,10 @@ namespace CodeInjection
         }
 
         private void EmitConstructor(
-            ILGenerator il,
-            FieldInfo pipelineField,
-            FieldInfo realInstanceField)
+            [NotNull] ILGenerator il,
+            [NotNull] FieldInfo pipelineField,
+            [NotNull] FieldInfo realInstanceField)
         {
-            Contract.Requires(il != null);
-            Contract.Requires(pipelineField != null);
-            Contract.Requires(realInstanceField != null);
-
             var parentConstructor = typeof(object).GetConstructor(Type.EmptyTypes);
             Contract.Assume(parentConstructor != null);
 
@@ -238,28 +223,23 @@ namespace CodeInjection
 
     public static class MethodMetadataContainer
     {
-        private static readonly ConcurrentDictionary<string, Type> _types = new ConcurrentDictionary<string, Type>();
+        private static readonly ConcurrentDictionary<string, Type> Types = new ConcurrentDictionary<string, Type>();
 
-        public static void AddMethods(Type type)
+        public static void AddMethods([NotNull] Type type)
         {
-            Contract.Requires(type != null);
+            if (type == null) throw new ArgumentNullException(nameof(type));
+            if (type.FullName == null) throw new NotSupportedException("Type without FullName is not supported");
 
-            _types.TryAdd(type.FullName, type);
+            Types.TryAdd(type.FullName, type);
         }
 
-        public static MethodInfo GetMethodInfo(string interfaceName, int methodIndex)
+        [UsedImplicitly]
+        public static MethodInfo GetMethodInfo([NotNull] string interfaceName, int methodIndex)
         {
-            Contract.Requires(interfaceName != null);
-            Contract.Requires(methodIndex > -1);
-
-            Type type;
-            if (_types.TryGetValue(interfaceName, out type))
-            {
-                var methods = type.GetMethods();
-                return methods.Length > methodIndex ? methods[methodIndex] : null;
-            }
-
-            return null;
+            if (!Types.TryGetValue(interfaceName, out var type)) return null;
+            
+            var methods = type.GetMethods();
+            return methods.Length > methodIndex ? methods[methodIndex] : null;
         }
     }
 }

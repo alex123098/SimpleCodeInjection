@@ -246,9 +246,11 @@ namespace CodeInjection.Tests
 
     public class ProxyInjectionTest : IInjectionTest
     {
+        // ReSharper disable UnusedParameter.Local
         public ProxyInjectionTest(IInjectedPipeline p, IInjectionTest t)
         {
         }
+        // ReSharper enable UnusedParameter.Local
 
         public void TestVoidMethod()
         {

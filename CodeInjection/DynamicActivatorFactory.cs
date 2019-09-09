@@ -2,13 +2,16 @@
 using System.Diagnostics.Contracts;
 using System.Reflection;
 using System.Reflection.Emit;
+using JetBrains.Annotations;
 
 namespace CodeInjection
 {
     public class DynamicActivatorFactory : IActivatorFactory
     {
-        public FactoryMethodDelegate<T> CreateActivatorOf<T>(Type exactType)
+        public FactoryMethodDelegate<T> CreateActivatorOf<T>([NotNull] Type exactType)
         {
+            if (exactType == null) throw new ArgumentNullException(nameof(exactType));
+
             var ctor = exactType.GetConstructor(new[] { typeof(IInjectedPipeline), typeof(T) });
             Contract.Assume(ctor != null);
 
@@ -20,11 +23,8 @@ namespace CodeInjection
             return (FactoryMethodDelegate<T>) factoryMethodBuilder.CreateDelegate(typeof(FactoryMethodDelegate<T>));
         }
 
-        private void EmitFactoryBody(ILGenerator il, ConstructorInfo constructor)
+        private void EmitFactoryBody([NotNull] ILGenerator il, [NotNull] ConstructorInfo constructor)
         {
-            Contract.Requires(il != null);
-            Contract.Requires(constructor != null);
-
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldarg_1);
             il.Emit(OpCodes.Newobj, constructor);

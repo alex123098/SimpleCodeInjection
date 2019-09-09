@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 
 namespace CodeInjection
 {
@@ -9,22 +10,22 @@ namespace CodeInjection
         private readonly IProxyFactory _decoratedFactory;
         private readonly ConcurrentDictionary<string, Type> _proxyCache;
 
-        public CacheableProxyFactory(IProxyFactory proxyFactory)
+        public CacheableProxyFactory([NotNull] IProxyFactory proxyFactory)
         {
-            Contract.Requires(proxyFactory != null);
-
-            _decoratedFactory = proxyFactory;
+            _decoratedFactory = proxyFactory ?? throw new ArgumentNullException(nameof(proxyFactory));
             _proxyCache = new ConcurrentDictionary<string, Type>();
         }
 
-        public Type CreateProxyType<T>(T realInstance, IInjectedPipeline injectedPipeline)
+        public Type CreateProxyType<T>([NotNull] T realInstance, [NotNull] IInjectedPipeline injectedPipeline)
         {
-            Type proxyType;
+            if (realInstance == null) throw new ArgumentNullException(nameof(realInstance));
+            if (injectedPipeline == null) throw new ArgumentNullException(nameof(injectedPipeline));
+
             var instanceType = realInstance.GetType();
             var pipelineType = injectedPipeline.GetType();
             var proxyKey = GetProxyKey(instanceType, pipelineType);
 
-            if (_proxyCache.TryGetValue(proxyKey, out proxyType))
+            if (_proxyCache.TryGetValue(proxyKey, out var proxyType))
             {
                 Contract.Assume(typeof(T).IsAssignableFrom(proxyType));
                 return proxyType;
@@ -35,19 +36,9 @@ namespace CodeInjection
             return proxyType;
         }
 
-        private string GetProxyKey(Type instanceType, Type pipelineType)
+        private string GetProxyKey([NotNull] Type instanceType, [NotNull] Type pipelineType)
         {
-            Contract.Assume(instanceType != null);
-            Contract.Assume(pipelineType != null);
-
             return string.Concat(instanceType.FullName, "##", pipelineType.FullName);
-        }
-
-        [ContractInvariantMethod]
-        private void ContractInvariants()
-        {
-            Contract.Invariant(_decoratedFactory != null);
-            Contract.Invariant(_proxyCache != null);
         }
     }
 }
