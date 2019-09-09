@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Reflection;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Engines;
 using BenchmarkDotNet.Running;
 
 namespace CodeInjection.SampleApp
 {
-//    [SimpleJob(RunStrategy.ColdStart, launchCount:10)]
     public class Cases
     {
         private readonly ISampleService _manuallyDecorated;
