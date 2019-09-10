@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <PackageId>SimpleCodeInjection</PackageId>
-    <Version>0.1.0-beta</Version>
+    <Version>0.1.0</Version>
     <Authors>Oleksii Zaichenko</Authors>
     <Description>Simple code injection library based on Reflection.Emit.</Description>
     <TargetFramework>netstandard2.0</TargetFramework>
