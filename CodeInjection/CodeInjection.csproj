@@ -6,6 +6,7 @@
     <Authors>Oleksii Zaichenko</Authors>
     <Description>Simple code injection library based on Reflection.Emit.</Description>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
