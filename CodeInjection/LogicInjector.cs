@@ -1,7 +1,6 @@
 ﻿using System;
 using CodeInjection.Activators;
 using CodeInjection.Caching;
-using JetBrains.Annotations;
 
 namespace CodeInjection
 {
@@ -16,21 +15,19 @@ namespace CodeInjection
             SetDefaultActivatorFactory();
         }
 
-        [NotNull]
         public IProxyFactory ProxyFactory
         {
             get => _proxyFactory;
             set => _proxyFactory = value ?? throw new ArgumentNullException();
         }
 
-        [NotNull]
         public IActivatorFactory ActivatorFactory
         {
             get => _activatorFactory;
             set => _activatorFactory = value ?? throw new ArgumentNullException();
         }
 
-        public TResult CreateProxyFor<T, TResult>([NotNull] T realInstance, [NotNull] IInjectedPipeline injectedPipeline) where T : TResult
+        public TResult CreateProxyFor<T, TResult>(T realInstance, IInjectedPipeline injectedPipeline) where T : TResult
         {
             if (realInstance == null) throw new ArgumentNullException(nameof(realInstance));
             if (injectedPipeline == null) throw new ArgumentNullException(nameof(injectedPipeline));
@@ -40,7 +37,7 @@ namespace CodeInjection
             return (TResult) activator.Invoke(injectedPipeline, realInstance);
         }
 
-        public T CreateProxyFor<T>([NotNull] T realInstance, [NotNull] IInjectedPipeline injectedPipeline)
+        public T CreateProxyFor<T>(T realInstance, IInjectedPipeline injectedPipeline)
         {
             return CreateProxyFor<T, T>(realInstance, injectedPipeline);
         }

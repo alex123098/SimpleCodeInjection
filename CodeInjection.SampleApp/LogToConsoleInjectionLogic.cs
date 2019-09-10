@@ -20,6 +20,21 @@ namespace CodeInjection.SampleApp
             return next;
         }
 
+        public IInjectedLogic ExecutionException(object target, MethodInfo invokedMethod, object[] parameters, Exception e,
+            IInjectedLogic previous)
+        {
+            var targetType = target.GetType();
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("[Exception] Starts For:");
+            Console.WriteLine("Type [{0}], instance hash: {{{1}}}", targetType.FullName, target.GetHashCode());
+            Console.WriteLine("Execution failed [{0}]", invokedMethod.Name);
+            Console.WriteLine();
+            Console.ResetColor();
+
+            return previous;
+        }
+
         public IInjectedLogic AfterExecute(object target, MethodInfo invokedMethod, object[] parameters,
             IInjectedLogic previous)
         {
@@ -27,7 +42,7 @@ namespace CodeInjection.SampleApp
 
             Console.ForegroundColor = ConsoleColor.DarkGray;
             Console.WriteLine();
-            Console.WriteLine("[Before execute] Ends For:");
+            Console.WriteLine("[After execute] Ends For:");
             Console.WriteLine("Type [{0}], instance hash: {{{1}}}", targetType.FullName, target.GetHashCode());
             Console.WriteLine("Method [{0}] execution finished", invokedMethod.Name);
             Console.ResetColor();

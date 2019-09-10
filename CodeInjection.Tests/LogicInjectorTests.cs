@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using System.Text;
 using Moq;
 using Xunit;
@@ -168,6 +169,25 @@ namespace CodeInjection.Tests
 
             Assert.Equal(expected, resut);
         }
+        
+        [Fact]
+        public void CreateProxy_WillBeAbleToCallExceptionHook()
+        {
+            ILogicInjector injector = new LogicInjector();
+            IInjectionTest actualInstance = new TestClass();
+            var pipelineMock = new Mock<IInjectedPipeline>();
+
+            var instance = injector.CreateProxyFor(actualInstance, pipelineMock.Object);
+            try
+            {
+                instance.BuggyMethod();
+            }
+            catch { /**/ }
+
+            pipelineMock.Verify(p => p.ExecuteExceptionHandler(
+                actualInstance, It.IsAny<MethodInfo>(),
+                It.IsAny<object[]>(), It.IsAny<Exception>()));
+        }
 
         [Fact]
         public void CreateProxy_WillCall_ProxyFactory()
@@ -227,23 +247,6 @@ namespace CodeInjection.Tests
         Two
     }
 
-    public interface IInjectionTest
-    {
-        void TestVoidMethod();
-
-        void TestVoidWithArgs(string stArg, int intArg, SimpleEnum enumArg);
-
-        StringBuilder TestReturnsStringBuilder();
-
-        string TestReturnsString();
-
-        int TestReturnsInt();
-
-        SimpleEnum TestReturnsEnum();
-
-        bool TestReturnsBool();
-    }
-
     public class ProxyInjectionTest : IInjectionTest
     {
         // ReSharper disable UnusedParameter.Local
@@ -283,6 +286,11 @@ namespace CodeInjection.Tests
         public bool TestReturnsBool()
         {
             return false;
+        }
+
+        public void BuggyMethod()
+        {
+            throw new Exception();
         }
     }
 }

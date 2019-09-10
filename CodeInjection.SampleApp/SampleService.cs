@@ -6,6 +6,7 @@ namespace CodeInjection.SampleApp
     public interface ISampleService
     {
         void DoSomethingUseful();
+        void ThrowError();
     }
 
     public class SampleService : ISampleService
@@ -21,6 +22,11 @@ namespace CodeInjection.SampleApp
         public void DoSomethingUseful()
         {
             Array.Sort(_values);
+        }
+
+        public void ThrowError()
+        {
+            throw new InvalidOperationException();
         }
     }
 }

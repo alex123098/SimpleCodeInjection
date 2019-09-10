@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 
 namespace CodeInjection
 {
@@ -7,5 +8,6 @@ namespace CodeInjection
         void Add(IInjectedLogic injectedLogic);
         void ExecutePreCondition(object target, MethodInfo invokedMethodInfo, object[] arguments);
         void ExecutePostCondition(object target, MethodInfo invokedMethodInfo, object[] arguments);
+        void ExecuteExceptionHandler(object target, MethodInfo invokedMethodInfo, object[] arguments, Exception e);
     }
 }

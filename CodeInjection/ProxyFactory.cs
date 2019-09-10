@@ -4,7 +4,6 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using JetBrains.Annotations;
 
 namespace CodeInjection
 {
@@ -19,7 +18,7 @@ namespace CodeInjection
             _moduleBuilder = assemblyBuilder.DefineDynamicModule(Guid.NewGuid().ToString());
         }
 
-        public Type CreateProxyType<T>([NotNull] T realInstance, [NotNull] IInjectedPipeline injectedPipeline)
+        public Type CreateProxyType<T>(T realInstance, IInjectedPipeline injectedPipeline)
         {
             if (realInstance == null) throw new ArgumentNullException(nameof(realInstance));
             if (injectedPipeline == null) throw new ArgumentNullException(nameof(injectedPipeline));
@@ -64,10 +63,10 @@ namespace CodeInjection
         #region Emit methods
 
         private void EmitInterfaceImplementation(
-            [NotNull] Type @interface,
-            [NotNull] TypeBuilder typeBuilder,
-            [NotNull] FieldBuilder pipelineField,
-            [NotNull] FieldBuilder realInstanceField)
+            Type @interface,
+            TypeBuilder typeBuilder,
+            FieldBuilder pipelineField,
+            FieldBuilder realInstanceField)
         {
             if (@interface.FullName == null) 
                 throw new NotSupportedException("Interface without FullName is not supported");
@@ -98,17 +97,19 @@ namespace CodeInjection
         }
 
         private void EmitMethodDefinition(
-            [NotNull] string interfaceName,
+            string interfaceName,
             int methodIndex,
-            [NotNull] ILGenerator il,
-            [NotNull] FieldInfo pipelineField,
-            [NotNull] FieldInfo realInstanceField,
-            [NotNull] MethodInfo methodInfo)
+            ILGenerator il,
+            FieldInfo pipelineField,
+            FieldInfo realInstanceField,
+            MethodInfo methodInfo)
         {
             // declare array of parameters for a method
             var methodParameters = methodInfo.GetParameters();
             il.DeclareLocal(typeof(object[]));
-
+            il.DeclareLocal(typeof(Exception));
+            var invokeComplete = il.DefineLabel();
+            
             // declare a local variable for a method result if it returns value
             var returnType = methodInfo.ReturnType;
             if (returnType != typeof(void)) il.DeclareLocal(returnType);
@@ -138,11 +139,13 @@ namespace CodeInjection
             // call MethodMetadataContainer.GetMethodInfo. Unfortunately this is the only way to load method info to stack :(
             il.Emit(OpCodes.Ldstr, interfaceName);
             il.Emit(OpCodes.Ldc_I4, methodIndex);
-            il.Emit(OpCodes.Call, typeof(MethodMetadataContainer).GetMethod("GetMethodInfo"));
+            il.Emit(OpCodes.Call, typeof(MethodMetadataContainer).GetMethod(nameof(MethodMetadataContainer.GetMethodInfo)));
             // load arguments of current method
             il.Emit(OpCodes.Ldloc_0);
-            il.Emit(OpCodes.Callvirt, typeof(IInjectedPipeline).GetMethod("ExecutePreCondition"));
+            il.Emit(OpCodes.Callvirt, typeof(IInjectedPipeline).GetMethod(nameof(IInjectedPipeline.ExecutePreCondition)));
 
+            il.BeginExceptionBlock();
+            
             // call actual method
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldfld, realInstanceField);
@@ -151,8 +154,11 @@ namespace CodeInjection
 
             // store return value
             if (methodInfo.ReturnType != typeof(void)) il.Emit(OpCodes.Stloc_1);
-
-            // call PostExecute method
+            il.Emit(OpCodes.Leave_S, invokeComplete);
+            
+            il.BeginCatchBlock(typeof(Exception));
+            
+            il.Emit(OpCodes.Stloc_1);
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldfld, pipelineField);
             il.Emit(OpCodes.Ldarg_0);
@@ -160,10 +166,28 @@ namespace CodeInjection
             // call MethodMetadataContainer.GetMethodInfo. Unfortunately this is the only way to load method info to stack :(
             il.Emit(OpCodes.Ldstr, interfaceName);
             il.Emit(OpCodes.Ldc_I4, methodIndex);
-            il.Emit(OpCodes.Call, typeof(MethodMetadataContainer).GetMethod("GetMethodInfo"));
+            il.Emit(OpCodes.Call, typeof(MethodMetadataContainer).GetMethod(nameof(MethodMetadataContainer.GetMethodInfo)));
             // load arguments of current method
             il.Emit(OpCodes.Ldloc_0);
-            il.Emit(OpCodes.Callvirt, typeof(IInjectedPipeline).GetMethod("ExecutePostCondition"));
+            il.Emit(OpCodes.Ldloc_1);
+            il.Emit(OpCodes.Callvirt, typeof(IInjectedPipeline).GetMethod(nameof(IInjectedPipeline.ExecuteExceptionHandler)));
+            il.Emit(OpCodes.Rethrow);
+            
+            il.EndExceptionBlock();
+            
+            // call PostExecute method
+            il.MarkLabel(invokeComplete);
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldfld, pipelineField);
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldfld, realInstanceField);
+            // call MethodMetadataContainer.GetMethodInfo. Unfortunately this is the only way to load method info to stack :(
+            il.Emit(OpCodes.Ldstr, interfaceName);
+            il.Emit(OpCodes.Ldc_I4, methodIndex);
+            il.Emit(OpCodes.Call, typeof(MethodMetadataContainer).GetMethod(nameof(MethodMetadataContainer.GetMethodInfo)));
+            // load arguments of current method
+            il.Emit(OpCodes.Ldloc_0);
+            il.Emit(OpCodes.Callvirt, typeof(IInjectedPipeline).GetMethod(nameof(IInjectedPipeline.ExecutePostCondition)));
 
             // push return value
             if (methodInfo.ReturnType != typeof(void)) il.Emit(OpCodes.Ldloc_1);
@@ -172,9 +196,9 @@ namespace CodeInjection
         }
 
         private void EmitConstructor(
-            [NotNull] ILGenerator il,
-            [NotNull] FieldInfo pipelineField,
-            [NotNull] FieldInfo realInstanceField)
+            ILGenerator il,
+            FieldInfo pipelineField,
+            FieldInfo realInstanceField)
         {
             var parentConstructor = typeof(object).GetConstructor(Type.EmptyTypes);
             Contract.Assume(parentConstructor != null);
@@ -225,7 +249,7 @@ namespace CodeInjection
     {
         private static readonly ConcurrentDictionary<string, Type> Types = new ConcurrentDictionary<string, Type>();
 
-        public static void AddMethods([NotNull] Type type)
+        public static void AddMethods(Type type)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
             if (type.FullName == null) throw new NotSupportedException("Type without FullName is not supported");
@@ -233,8 +257,7 @@ namespace CodeInjection
             Types.TryAdd(type.FullName, type);
         }
 
-        [UsedImplicitly]
-        public static MethodInfo GetMethodInfo([NotNull] string interfaceName, int methodIndex)
+        public static MethodInfo GetMethodInfo(string interfaceName, int methodIndex)
         {
             if (!Types.TryGetValue(interfaceName, out var type)) return null;
             

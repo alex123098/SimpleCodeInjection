@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using JetBrains.Annotations;
 
 namespace CodeInjection
 {
@@ -9,7 +8,7 @@ namespace CodeInjection
     {
         private readonly LinkedList<IInjectedLogic> _registeredLogics = new LinkedList<IInjectedLogic>();
 
-        public void Add([NotNull] IInjectedLogic injectedLogic)
+        public void Add(IInjectedLogic injectedLogic)
         {
             if (injectedLogic == null) throw new ArgumentNullException(nameof(injectedLogic));
 
@@ -17,9 +16,9 @@ namespace CodeInjection
         }
 
         public void ExecutePreCondition(
-            [NotNull] object target, 
-            [NotNull] MethodInfo invokedMethodInfo, 
-            [NotNull] object[] arguments)
+            object target, 
+            MethodInfo invokedMethodInfo, 
+            object[] arguments)
         {
             if (target == null) throw new ArgumentNullException(nameof(target));
             if (invokedMethodInfo == null) throw new ArgumentNullException(nameof(invokedMethodInfo));
@@ -37,9 +36,9 @@ namespace CodeInjection
         }
 
         public void ExecutePostCondition(
-            [NotNull] object target, 
-            [NotNull] MethodInfo invokedMethodInfo,
-            [NotNull] object[] arguments)
+            object target, 
+            MethodInfo invokedMethodInfo,
+            object[] arguments)
         {
             if (target == null) throw new ArgumentNullException(nameof(target));
             if (invokedMethodInfo == null) throw new ArgumentNullException(nameof(invokedMethodInfo));
@@ -51,6 +50,23 @@ namespace CodeInjection
                 var prevLogic = logic.Previous;
                 var logicToExecute = logic.Value.AfterExecute(target, invokedMethodInfo, arguments,
                     prevLogic?.Value);
+                if (logicToExecute == null) break;
+                prevLogic = _registeredLogics.Find(logicToExecute);
+                logic = prevLogic;
+            }
+        }
+
+        public void ExecuteExceptionHandler(
+            object target,
+            MethodInfo invokedMethodInfo, 
+            object[] arguments,
+            Exception e)
+        {
+            var logic = _registeredLogics.Last;
+            while (logic != null)
+            {
+                var prevLogic = logic.Previous;
+                var logicToExecute = logic.Value.ExecutionException(target, invokedMethodInfo, arguments, e, prevLogic?.Value);
                 if (logicToExecute == null) break;
                 prevLogic = _registeredLogics.Find(logicToExecute);
                 logic = prevLogic;

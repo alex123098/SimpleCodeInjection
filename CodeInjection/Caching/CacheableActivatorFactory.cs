@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using JetBrains.Annotations;
 
 namespace CodeInjection.Caching
 {
@@ -15,7 +14,7 @@ namespace CodeInjection.Caching
             _cachedFactories = new ConcurrentDictionary<string, object>();
         }
 
-        public FactoryMethodDelegate<T> CreateActivatorOf<T>([NotNull] Type exactType)
+        public FactoryMethodDelegate<T> CreateActivatorOf<T>(Type exactType)
         {
             if (exactType == null) throw new ArgumentNullException(nameof(exactType));
 
@@ -27,7 +26,7 @@ namespace CodeInjection.Caching
             return (FactoryMethodDelegate<T>) cachedFactory;
         }
 
-        private string GetKeyFor([NotNull] Type abstractType, [NotNull] Type exactType)
+        private string GetKeyFor(Type abstractType, Type exactType)
         {
             return string.Concat(abstractType.FullName, "##", exactType.FullName);
         }

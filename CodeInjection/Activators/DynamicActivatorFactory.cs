@@ -2,13 +2,12 @@
 using System.Diagnostics.Contracts;
 using System.Reflection;
 using System.Reflection.Emit;
-using JetBrains.Annotations;
 
 namespace CodeInjection.Activators
 {
     public class DynamicActivatorFactory : IActivatorFactory
     {
-        public FactoryMethodDelegate<T> CreateActivatorOf<T>([NotNull] Type exactType)
+        public FactoryMethodDelegate<T> CreateActivatorOf<T>(Type exactType)
         {
             if (exactType == null) throw new ArgumentNullException(nameof(exactType));
 
@@ -23,7 +22,7 @@ namespace CodeInjection.Activators
             return (FactoryMethodDelegate<T>) factoryMethodBuilder.CreateDelegate(typeof(FactoryMethodDelegate<T>));
         }
 
-        private void EmitFactoryBody([NotNull] ILGenerator il, [NotNull] ConstructorInfo constructor)
+        private void EmitFactoryBody(ILGenerator il, ConstructorInfo constructor)
         {
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldarg_1);
