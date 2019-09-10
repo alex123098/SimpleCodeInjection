@@ -1,4 +1,5 @@
-﻿using Moq;
+﻿using CodeInjection.Activators;
+using Moq;
 using Xunit;
 
 namespace CodeInjection.Tests

@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics.Contracts;
 using JetBrains.Annotations;
 
-namespace CodeInjection
+namespace CodeInjection.Caching
 {
     public class CacheableProxyFactory : IProxyFactory
     {

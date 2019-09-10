@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using JetBrains.Annotations;
 
-namespace CodeInjection
+namespace CodeInjection.Caching
 {
     public class CacheableActivatorFactory : IActivatorFactory
     {
