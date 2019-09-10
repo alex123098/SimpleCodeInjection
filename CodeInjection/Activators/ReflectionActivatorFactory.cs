@@ -1,7 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 
-namespace CodeInjection
+namespace CodeInjection.Activators
 {
     public class ReflectionActivatorFactory : IActivatorFactory
     {

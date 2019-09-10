@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using JetBrains.Annotations;
 
-namespace CodeInjection
+namespace CodeInjection.Activators
 {
     public class DynamicActivatorFactory : IActivatorFactory
     {

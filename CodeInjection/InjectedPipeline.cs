@@ -50,7 +50,7 @@ namespace CodeInjection
             {
                 var prevLogic = logic.Previous;
                 var logicToExecute = logic.Value.AfterExecute(target, invokedMethodInfo, arguments,
-                    prevLogic == null ? null : prevLogic.Value);
+                    prevLogic?.Value);
                 if (logicToExecute == null) break;
                 prevLogic = _registeredLogics.Find(logicToExecute);
                 logic = prevLogic;

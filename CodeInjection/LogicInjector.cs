@@ -1,4 +1,6 @@
 ﻿using System;
+using CodeInjection.Activators;
+using CodeInjection.Caching;
 using JetBrains.Annotations;
 
 namespace CodeInjection
