@@ -49,7 +49,7 @@ namespace CodeInjection.SampleApp
         public HardCodedDecorator(ISampleService service)
         {
             _service = service;
-            _doSomethingUsefulMethodInfo = _service.GetType().GetMethod("DoSomethingUseful");
+            _doSomethingUsefulMethodInfo = _service.GetType().GetMethod("DoSomethingUseful")!;
         }
 
         public void DoSomethingUseful()

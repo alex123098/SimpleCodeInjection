@@ -21,7 +21,7 @@ namespace CodeInjection.Tests
         {
             IInjectedPipeline pipeline = new InjectedPipeline();
 
-            pipeline.ExecutePostCondition(new object(), typeof(object).GetMethod("ToString"), new object[0]);
+            pipeline.ExecutePostCondition(new object(), typeof(object).GetMethod("ToString")!, new object[0]);
         }
 
         [Fact]
@@ -39,7 +39,7 @@ namespace CodeInjection.Tests
             pipeline.Add(logic.Object);
 
             Assert.Throws<InvalidOperationException>(
-                () => pipeline.ExecutePostCondition(new object(), typeof(object).GetMethod("ToString"), new object[0]));
+                () => pipeline.ExecutePostCondition(new object(), typeof(object).GetMethod("ToString")!, new object[0]));
         }
 
         [Fact]
@@ -49,11 +49,11 @@ namespace CodeInjection.Tests
             var logic = new Mock<IInjectedLogic>();
             logic.Setup(l => l.AfterExecute(It.IsAny<object>(), It.IsAny<MethodInfo>(), It.IsAny<object[]>(),
                     It.IsAny<IInjectedLogic>()))
-                .Returns((IInjectedLogic) null)
+                .Returns((IInjectedLogic?) null)
                 .Verifiable();
             pipeline.Add(logic.Object);
 
-            pipeline.ExecutePostCondition(new object(), typeof(object).GetMethod("ToString"), new object[0]);
+            pipeline.ExecutePostCondition(new object(), typeof(object).GetMethod("ToString")!, new object[0]);
 
             logic.Verify();
         }
@@ -70,13 +70,13 @@ namespace CodeInjection.Tests
                         It.IsAny<MethodInfo>(),
                         It.IsAny<object[]>(),
                         It.IsAny<IInjectedLogic>()))
-                .Returns((IInjectedLogic) null)
+                .Returns((IInjectedLogic?) null)
                 .Verifiable();
 
             pipeline.Add(firstLogic.Object);
             pipeline.Add(lastLogic.Object);
 
-            pipeline.ExecutePostCondition(new object(), typeof(object).GetMethod("ToString"), new object[0]);
+            pipeline.ExecutePostCondition(new object(), typeof(object).GetMethod("ToString")!, new object[0]);
 
             firstLogic.Verify(l => l.AfterExecute(
                     It.IsAny<object>(),
@@ -107,13 +107,13 @@ namespace CodeInjection.Tests
                         It.IsAny<MethodInfo>(),
                         It.IsAny<object[]>(),
                         It.IsAny<IInjectedLogic>()))
-                .Returns((IInjectedLogic) null)
+                .Returns((IInjectedLogic?) null)
                 .Verifiable();
 
             pipeline.Add(firstLogic.Object);
             pipeline.Add(lastLogic.Object);
 
-            pipeline.ExecutePostCondition(new object(), typeof(object).GetMethod("ToString"), new object[0]);
+            pipeline.ExecutePostCondition(new object(), typeof(object).GetMethod("ToString")!, new object[0]);
 
             firstLogic.Verify();
             lastLogic.Verify();
@@ -124,7 +124,7 @@ namespace CodeInjection.Tests
         {
             IInjectedPipeline pipeline = new InjectedPipeline();
 
-            pipeline.ExecutePreCondition(new object(), typeof(object).GetMethod("ToString"), new object[0]);
+            pipeline.ExecutePreCondition(new object(), typeof(object).GetMethod("ToString")!, new object[0]);
         }
 
         [Fact]
@@ -142,7 +142,7 @@ namespace CodeInjection.Tests
             pipeline.Add(logic.Object);
 
             Assert.Throws<InvalidOperationException>(
-                () => pipeline.ExecutePreCondition(new object(), typeof(object).GetMethod("ToString"), new object[0]));
+                () => pipeline.ExecutePreCondition(new object(), typeof(object).GetMethod("ToString")!, new object[0]));
         }
 
         [Fact]
@@ -152,11 +152,11 @@ namespace CodeInjection.Tests
             var logic = new Mock<IInjectedLogic>();
             logic.Setup(l => l.BeforeExecute(It.IsAny<object>(), It.IsAny<MethodInfo>(), It.IsAny<object[]>(),
                     It.IsAny<IInjectedLogic>()))
-                .Returns((IInjectedLogic) null)
+                .Returns((IInjectedLogic?) null)
                 .Verifiable();
             pipeline.Add(logic.Object);
 
-            pipeline.ExecutePreCondition(new object(), typeof(object).GetMethod("ToString"), new object[0]);
+            pipeline.ExecutePreCondition(new object(), typeof(object).GetMethod("ToString")!, new object[0]);
 
             logic.Verify();
         }
@@ -173,13 +173,13 @@ namespace CodeInjection.Tests
                         It.IsAny<MethodInfo>(),
                         It.IsAny<object[]>(),
                         It.IsAny<IInjectedLogic>()))
-                .Returns((IInjectedLogic) null)
+                .Returns((IInjectedLogic?) null)
                 .Verifiable();
 
             pipeline.Add(firstLogic.Object);
             pipeline.Add(lastLogic.Object);
 
-            pipeline.ExecutePreCondition(new object(), typeof(object).GetMethod("ToString"), new object[0]);
+            pipeline.ExecutePreCondition(new object(), typeof(object).GetMethod("ToString")!, new object[0]);
 
             lastLogic.Verify(l => l.BeforeExecute(
                     It.IsAny<object>(),
@@ -210,13 +210,13 @@ namespace CodeInjection.Tests
                         It.IsAny<MethodInfo>(),
                         It.IsAny<object[]>(),
                         It.IsAny<IInjectedLogic>()))
-                .Returns((IInjectedLogic) null)
+                .Returns((IInjectedLogic?) null)
                 .Verifiable();
 
             pipeline.Add(firstLogic.Object);
             pipeline.Add(lastLogic.Object);
 
-            pipeline.ExecutePreCondition(new object(), typeof(object).GetMethod("ToString"), new object[0]);
+            pipeline.ExecutePreCondition(new object(), typeof(object).GetMethod("ToString")!, new object[0]);
 
             firstLogic.Verify();
             lastLogic.Verify();

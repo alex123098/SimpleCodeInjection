@@ -1,6 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <LangVersion>8.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <PackageId>SimpleCodeInjection</PackageId>
     <Version>0.1.0</Version>
     <Authors>Oleksii Zaichenko</Authors>

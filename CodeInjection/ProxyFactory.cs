@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using JetBrains.Annotations;
 
 namespace CodeInjection
 {
@@ -19,7 +17,7 @@ namespace CodeInjection
             _moduleBuilder = assemblyBuilder.DefineDynamicModule(Guid.NewGuid().ToString());
         }
 
-        public Type CreateProxyType<T>([NotNull] T realInstance, [NotNull] IInjectedPipeline injectedPipeline)
+        public Type CreateProxyType<T>(T realInstance, IInjectedPipeline injectedPipeline)
         {
             if (realInstance == null) throw new ArgumentNullException(nameof(realInstance));
             if (injectedPipeline == null) throw new ArgumentNullException(nameof(injectedPipeline));
@@ -64,10 +62,10 @@ namespace CodeInjection
         #region Emit methods
 
         private void EmitInterfaceImplementation(
-            [NotNull] Type @interface,
-            [NotNull] TypeBuilder typeBuilder,
-            [NotNull] FieldBuilder pipelineField,
-            [NotNull] FieldBuilder realInstanceField)
+            Type @interface,
+            TypeBuilder typeBuilder,
+            FieldBuilder pipelineField,
+            FieldBuilder realInstanceField)
         {
             if (@interface.FullName == null) 
                 throw new NotSupportedException("Interface without FullName is not supported");
@@ -98,12 +96,12 @@ namespace CodeInjection
         }
 
         private void EmitMethodDefinition(
-            [NotNull] string interfaceName,
+            string interfaceName,
             int methodIndex,
-            [NotNull] ILGenerator il,
-            [NotNull] FieldInfo pipelineField,
-            [NotNull] FieldInfo realInstanceField,
-            [NotNull] MethodInfo methodInfo)
+            ILGenerator il,
+            FieldInfo pipelineField,
+            FieldInfo realInstanceField,
+            MethodInfo methodInfo)
         {
             // declare array of parameters for a method
             var methodParameters = methodInfo.GetParameters();
@@ -172,12 +170,11 @@ namespace CodeInjection
         }
 
         private void EmitConstructor(
-            [NotNull] ILGenerator il,
-            [NotNull] FieldInfo pipelineField,
-            [NotNull] FieldInfo realInstanceField)
+            ILGenerator il,
+            FieldInfo pipelineField,
+            FieldInfo realInstanceField)
         {
             var parentConstructor = typeof(object).GetConstructor(Type.EmptyTypes);
-            Contract.Assume(parentConstructor != null);
 
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Call, parentConstructor);
@@ -225,16 +222,15 @@ namespace CodeInjection
     {
         private static readonly ConcurrentDictionary<string, Type> Types = new ConcurrentDictionary<string, Type>();
 
-        public static void AddMethods([NotNull] Type type)
+        public static void AddMethods(Type type)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
             if (type.FullName == null) throw new NotSupportedException("Type without FullName is not supported");
 
             Types.TryAdd(type.FullName, type);
         }
-
-        [UsedImplicitly]
-        public static MethodInfo GetMethodInfo([NotNull] string interfaceName, int methodIndex)
+        
+        public static MethodInfo? GetMethodInfo(string interfaceName, int methodIndex)
         {
             if (!Types.TryGetValue(interfaceName, out var type)) return null;
             

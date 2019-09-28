@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Diagnostics.Contracts;
-using JetBrains.Annotations;
 
 namespace CodeInjection.Caching
 {
@@ -10,13 +8,13 @@ namespace CodeInjection.Caching
         private readonly IProxyFactory _decoratedFactory;
         private readonly ConcurrentDictionary<string, Type> _proxyCache;
 
-        public CacheableProxyFactory([NotNull] IProxyFactory proxyFactory)
+        public CacheableProxyFactory(IProxyFactory proxyFactory)
         {
             _decoratedFactory = proxyFactory ?? throw new ArgumentNullException(nameof(proxyFactory));
             _proxyCache = new ConcurrentDictionary<string, Type>();
         }
 
-        public Type CreateProxyType<T>([NotNull] T realInstance, [NotNull] IInjectedPipeline injectedPipeline)
+        public Type CreateProxyType<T>(T realInstance, IInjectedPipeline injectedPipeline)
         {
             if (realInstance == null) throw new ArgumentNullException(nameof(realInstance));
             if (injectedPipeline == null) throw new ArgumentNullException(nameof(injectedPipeline));
@@ -27,7 +25,6 @@ namespace CodeInjection.Caching
 
             if (_proxyCache.TryGetValue(proxyKey, out var proxyType))
             {
-                Contract.Assume(typeof(T).IsAssignableFrom(proxyType));
                 return proxyType;
             }
 
@@ -36,7 +33,7 @@ namespace CodeInjection.Caching
             return proxyType;
         }
 
-        private string GetProxyKey([NotNull] Type instanceType, [NotNull] Type pipelineType)
+        private string GetProxyKey(Type instanceType, Type pipelineType)
         {
             return string.Concat(instanceType.FullName, "##", pipelineType.FullName);
         }

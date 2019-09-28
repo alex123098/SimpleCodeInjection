@@ -5,8 +5,8 @@ namespace CodeInjection.SampleApp
 {
     internal class LogToConsoleInjectionLogic : IInjectedLogic
     {
-        public IInjectedLogic BeforeExecute(object target, MethodInfo invokedMethod, object[] parameters,
-            IInjectedLogic next)
+        public IInjectedLogic? BeforeExecute(object target, MethodInfo invokedMethod, object[] parameters,
+            IInjectedLogic? next)
         {
             var targetType = target.GetType();
 
@@ -20,8 +20,8 @@ namespace CodeInjection.SampleApp
             return next;
         }
 
-        public IInjectedLogic AfterExecute(object target, MethodInfo invokedMethod, object[] parameters,
-            IInjectedLogic previous)
+        public IInjectedLogic? AfterExecute(object target, MethodInfo invokedMethod, object[] parameters,
+            IInjectedLogic? previous)
         {
             var targetType = target.GetType();
 
