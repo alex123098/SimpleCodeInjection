@@ -1,3 +1,3 @@
 #!/bin/sh -e
 
-dotnet pack CodeInjection/CodeInjection.csproj -c Release -o ../out
+dotnet pack CodeInjection/ -c Release -o ../out

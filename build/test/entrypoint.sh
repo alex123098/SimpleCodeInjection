@@ -1,3 +1,3 @@
 #!/bin/sh -e
 
-dotnet test CodeInjection.Tests/CodeInjection.Tests.csproj
+dotnet test -v n CodeInjection.Tests/
