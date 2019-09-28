@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:2.2-alpine3.9
+FROM mcr.microsoft.com/dotnet/core/sdk:3.0-alpine3.9
 
 
 LABEL "com.github.actions.name"="Test package"
